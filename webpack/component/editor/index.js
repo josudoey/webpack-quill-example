@@ -30,6 +30,8 @@ class ImageUpload extends ImageBlot {
     if (typeof value === 'string') {
       node.setAttribute('src', this.sanitize(value))
     }
+
+    node.setAttribute('src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=')
     const { file, dataURL } = value
 
     console.log({

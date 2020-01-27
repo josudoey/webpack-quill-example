@@ -10,11 +10,11 @@ styleElement.appendChild(document.createTextNode(`
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border: 3px solid #ccc;
-    border-top-color: #1e986c;
-    animation: upload-spinner 0.6s linear infinite;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    animation: spinner 1s linear infinite;
   }
-  @keyframes upload-spinner {
+  @keyframes spinner {
     to {
       transform: rotate(360deg);
     }
@@ -23,9 +23,35 @@ styleElement.appendChild(document.createTextNode(`
 
 const Quill = require('quill')
 
-const Image = Quill.import('formats/image')
-Image.className = 'img-responsive'
-Quill.register(Image, true)
+const ImageBlot = Quill.import('formats/image')
+class ImageUpload extends ImageBlot {
+  static create (value) {
+    const node = super.create(value)
+    if (typeof value === 'string') {
+      node.setAttribute('src', this.sanitize(value))
+    }
+    const { file, dataURL } = value
+
+    console.log({
+      type: file.type,
+      size: file.size,
+      fileName: file.name
+    })
+
+    node.classList.add('upload-placeholder')
+
+    const imgSrc = dataURL
+    setTimeout(function () {
+      node.setAttribute('src', imgSrc)
+      node.classList.remove('upload-placeholder')
+    }, 3000)
+    return node
+  }
+}
+
+ImageUpload.blotName = 'image-upload'
+
+Quill.register(ImageUpload, true)
 
 const editor = new Quill('#editor', {
   theme: 'bubble', // Specify theme in configuration
@@ -58,20 +84,17 @@ editor.getModule('toolbar').addHandler('image', () => {
   const input = document.createElement('input')
   input.setAttribute('type', 'file')
   input.setAttribute('accept', 'image/*')
-  input.click()
-
   input.onchange = () => {
     const file = input.files[0]
     const reader = new window.FileReader()
     reader.addEventListener('load', () => {
-      console.log({
-        type: file.type,
-        size: file.size,
-        fileName: file.name
-      })
       const range = editor.getSelection()
-      editor.insertEmbed(range.index, 'image', reader.result)
+      editor.insertEmbed(range.index, 'image-upload', {
+        file: file,
+        dataURL: reader.result
+      })
     }, false)
     reader.readAsDataURL(file)
   }
+  input.click()
 })
